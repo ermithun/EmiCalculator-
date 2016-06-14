@@ -1,0 +1,188 @@
+﻿@{
+    ViewData["Title"] = "About";
+}
+<div class="about">
+    <h2>@ViewData["Title"].</h2>
+    <h3>@ViewData["Message"]</h3>
+
+    <p>Use this area to provide additional information.</p>
+    <button class="btn btn-primary" id="emical">EmiCalculator</button>
+</div>
+
+<div class="emicalculator">
+
+    <link href="~/css/simple-slider.css" rel="stylesheet" />
+    <link href="~/css/simple-slider-volume.css" rel="stylesheet" />
+    <link href="~/lib/bootstrap/dist/css/bootstrap.css" rel="stylesheet" />
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/js/simple-slider.js"></script>
+
+    <div class="row">
+        <div class="col-md-12">
+
+            <div class="row">
+
+
+                <div class="col-md-5">
+                    <h4><span class="label label-info">Loan Amount</span></h4>
+                    <input type="text" value="260000" id="la_value" class="form-control input-sm">
+                    <h4><span class="label label-info">No. of Month</span></h4>
+                    <input type="text" value="6" id="nm_value" class="form-control input-sm">
+                    <h4><span class="label label-info">Rate of Interest</span></h4>
+                    <input type="text" value="10.2" id="roi_value" class="form-control input-sm">
+                    <br />
+                    <input type="submit" id="calculate" class="btn btn-primary btn-sm " value="Calculate" />
+                </div>
+                @*<div class="clearfix"></div>*@
+                <div class="col-md-7">
+                    <div class="alert alert-info col-md-5 ">
+                        <center>
+                            <strong>Monthly EMI</strong> <BR>
+                            <button type="button" class="btn btn-success btn-lg" id='emi'></button>
+                        </center>
+                    </div>
+
+                    <div class="alert alert-info col-md-5">
+                        <center>
+                            <strong>Total Interest</strong> <BR>
+                            <button type="button" class="btn btn-warning btn-lg" id='tbl_int'></button>
+                        </center>
+                    </div>
+
+
+                    <div class="alert alert-info col-md-5 ">
+                        <center>
+                            <strong>Payable Amount</strong> <BR>
+                            <button type="button" class="btn btn-info btn-lg" id='tbl_full'></button>
+                        </center>
+                    </div>
+
+                    <div class="alert alert-info col-md-5 ">
+                        <center>
+                            <strong>Interest Percentage</strong><BR>
+                            <button type="button" class="btn btn-info btn-lg" id='tbl_int_pge'></button>
+                        </center>
+                    </div>
+
+                </div>
+
+                <div class="col-md-5" id="container"></div>
+
+                <div class="clearfix"></div>
+                <div class="box-body table-responsive " id='datatable'>
+                    <table id='illustrate' class='table table-striped table-bordered'></table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script type="text/Javascript">
+
+    $(document).ready(function () {
+
+        $('#calculate').on('click', function () {
+            calculateEMI();
+        });
+        function calculateEMI() {
+
+            var loanAmount = $("#la_value").val();
+            var numberOfMonths = $("#nm_value").val();
+            var rateOfInterest = $("#roi_value").val();
+            var monthlyInterestRatio = (rateOfInterest / 100) / 12;
+
+            var top = Math.pow((1 + monthlyInterestRatio), numberOfMonths);
+            var bottom = top - 1;
+            var sp = top / bottom;
+            var emi = ((loanAmount * monthlyInterestRatio) * sp);
+            var full = numberOfMonths * emi;
+            var interest = full - loanAmount;
+            var int_pge = (interest / full) * 100;
+            $("#tbl_int_pge").html(int_pge.toFixed(2) + " %");
+            //$("#tbl_loan_pge").html((100-int_pge.toFixed(2))+" %");
+
+            var emi_str = emi.toFixed(2).toString().replace(/,/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            var loanAmount_str = loanAmount.toString().replace(/,/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            var full_str = full.toFixed(2).toString().replace(/,/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            var int_str = interest.toFixed(2).toString().replace(/,/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+            $("#emi").html(emi_str);
+            $("#tbl_emi").html(emi_str);
+            $("#tbl_la").html(loanAmount_str);
+            $("#tbl_nm").html(numberOfMonths);
+            $("#tbl_roi").html(rateOfInterest);
+            $("#tbl_full").html(full_str);
+            $("#tbl_int").html(int_str);
+            var detailDesc = "<thead><tr class='success'><th>Payment No.</th><th>Begining Balance</th><th>EMI</th><th>Principal</th><th>Interest</th><th>Ending Balance</th></thead><tbody>";
+            var bb = parseInt(loanAmount);
+            var int_dd = 0; var pre_dd = 0; var end_dd = 0;
+            for (var j = 1; j <= numberOfMonths; j++) {
+                int_dd = bb * ((rateOfInterest / 100) / 12);
+                pre_dd = emi.toFixed(2) - int_dd.toFixed(2);
+                end_dd = bb - pre_dd.toFixed(2);
+                detailDesc += "<tr><td>" + j + "</td><td>" + bb.toFixed(2) + "</td><td>" + emi.toFixed(2) + "</td><td>" + pre_dd.toFixed(2) + "</td><td>" + int_dd.toFixed(2) + "</td><td>" + end_dd.toFixed(2) + "</td></tr>";
+                bb = bb - pre_dd.toFixed(2);
+            }
+            detailDesc += "</tbody>";
+            $("#illustrate").html(detailDesc);
+            //$('#container').highcharts({
+
+            //    chart: {
+            //        plotBackgroundColor: null,
+            //        plotBorderWidth: null,
+            //        plotShadow: false,
+            //    },
+            //    title: {
+            //        text: 'EMI Calculator'
+            //    },
+            //    tooltip: {
+            //        //pointFormat: '{series.name}: <b>{point.value}%</b>'
+            //    },
+            //    plotOptions: {
+            //        pie: {
+            //            allowPointSelect: true,
+            //            cursor: 'pointer',
+            //            dataLabels: {
+            //                //	enabled: true,
+            //                color: '#000000',
+            //                connectorColor: '#000000',
+            //                format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+            //            }
+            //        }
+            //    },
+            //    series: [{
+            //        type: 'pie',
+            //        name: 'Amount',
+            //        data: [
+            //            ['Loan', eval(loanAmount)],
+            //            ['Interest', eval(interest.toFixed(2))]
+            //        ]
+            //    }]
+            //});
+
+        }
+        calculateEMI();
+
+    });
+
+
+    </script>
+</div>
+
+
+
+
+<script type="text/javascript">
+    $('.emicalculator').hide();
+    $(document).ready(function () {
+        $('#emical').on('click', function () {
+            $('.about').hide();
+            $('.emicalculator').show();
+
+
+
+        })
+
+
+    });
+</script>
